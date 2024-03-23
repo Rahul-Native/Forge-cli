@@ -51,4 +51,4 @@ jobs:
             echo "No changes to commit."
           fi
         env:
-          PAT_TOKEN: ${{ secrets.PAT_TOKEN }} # Use the PAT secret
+          PAT_TOKEN: ${{ secrets.Actions }} # Use the PAT secret
