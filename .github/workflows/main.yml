@@ -1,0 +1,44 @@
+name: Main Commit Check
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  check-files:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Find and remove old files
+        run: |
+          # Change to the directory where your folders are located
+          cd $GITHUB_WORKSPACE
+
+          # List all files and directories except for .git
+          ls -1 | grep -v .git | while read -r folder; do
+            # Change to the folder
+            cd "$folder"
+
+            # Count the number of files in the folder
+            file_count=$(ls -1 | wc -l)
+
+            # If there are more than 10 files, remove the oldest ones
+            if [ $file_count -gt 10 ]; then
+              ls -t | tail -n +11 | xargs -I {} rm -f {}
+            fi
+
+            # Move back to the main directory
+            cd ..
+          done
+
+      - name: Commit changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git commit -m "Remove older files"
+          git push
