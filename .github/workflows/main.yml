@@ -19,20 +19,23 @@ jobs:
           cd $GITHUB_WORKSPACE
 
           # List all files and directories except for .git
-          ls -1 | grep -v .git | while read -r folder; do
-            # Change to the folder
-            cd "$folder"
+          for item in *; do
+            # Check if the item is a directory
+            if [ -d "$item" ]; then
+              # Change to the folder
+              cd "$item"
 
-            # Count the number of files in the folder
-            file_count=$(ls -1 | wc -l)
+              # Count the number of files in the folder
+              file_count=$(ls -1 | wc -l)
 
-            # If there are more than 10 files, remove the oldest ones
-            if [ $file_count -gt 10 ]; then
-              ls -t | tail -n +11 | xargs -I {} rm -f {}
+              # If there are more than 10 files, remove the oldest ones
+              if [ $file_count -gt 10 ]; then
+                ls -t | tail -n +11 | xargs -I {} rm -f {}
+              fi
+
+              # Move back to the main directory
+              cd ..
             fi
-
-            # Move back to the main directory
-            cd ..
           done
 
       - name: Commit changes
