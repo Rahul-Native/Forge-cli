@@ -52,7 +52,7 @@ jobs:
         run: |
           if [ -n "$(git status --porcelain)" ]; then
             git config --local user.email "rahulrev65@gmail.com"
-            git config --local user.name "RahulNative"
+            git config --local user.name "Rahul-Native"
             git add .
             git commit -m "Remove older files"
             # Use the PAT for authentication
