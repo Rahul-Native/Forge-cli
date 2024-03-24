@@ -12,6 +12,16 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+          repository: Forge-cli
+          ssh-strict: true
+          persist-credentials: false
+          clean: true
+          fetch-depth: 1
+          lfs: false
+          submodules: false
+          set-safe-directory: true
+          token: ${{ secrets.ACTIONS }}
 
       - name: Find and remove old files
         run: |
@@ -50,5 +60,3 @@ jobs:
           else
             echo "No changes to commit."
           fi
-        env:
-          PAT_TOKEN: ${{ secrets.ACTIONS }} # Use the PAT secret
