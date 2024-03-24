@@ -1,9 +1,20 @@
 {
    "releaseInfo": {
       "buildName": "main",
-      "ecuName": "ApiM",
-      "canRx": "Can rx",
+      "ecuName": "hj",
+      "canRx": "tyr",
       "productionState": "PROTOTYPE"
    },
-   "release": []
+   "release": [
+      {
+         "div": "Div1",
+         "divVersion": "Div1",
+         "programCode": "Div1",
+         "modelYear": "Div1",
+         "partIISpecification": "Div1",
+         "hardware": "Div1",
+         "applications": "Div1",
+         "dependencyDetails": []
+      }
+   ]
 }
