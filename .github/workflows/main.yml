@@ -54,4 +54,4 @@ jobs:
             git config --global user.name "${{ github.event.pusher.name }}"
             git add .
             git commit -m "Remove older files"
-            git push
+            git push origin HEAD:main --oauth-token=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
