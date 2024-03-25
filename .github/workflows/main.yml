@@ -35,7 +35,7 @@ jobs:
               # Change to the folder
               cd "$item"
 
-              # Count the number of files in the folder
+              # Count the number of files in the folders
               file_count=$(ls -1 | wc -l)
 
               # If there are more than 2 files, remove the oldest ones
