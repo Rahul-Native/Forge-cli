@@ -1,0 +1,9 @@
+{
+   "releaseInfo": {
+      "buildName": "main",
+      "ecuName": "ApiM",
+      "canRx": "Can rx",
+      "productionState": "PROTOTYPE"
+   },
+   "release": []
+}
