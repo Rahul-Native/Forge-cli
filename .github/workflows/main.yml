@@ -50,12 +50,8 @@ jobs:
 
       - name: Check for changes and commit
         run: |
-          # if [ -n "$(git status --porcelain)" ]; then
             git config --global user.email "${{ github.event.pusher.email }}"
             git config --global user.name "${{ github.event.pusher.name }}"
             git add .
             git commit -m "Remove older files"
             git push
-          # else
-          #   echo "No changes to commit."
-          # fi
