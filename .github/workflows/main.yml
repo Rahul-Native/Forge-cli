@@ -31,7 +31,8 @@ jobs:
         id: determine_folder
         run: |
           # Determine the folder containing the modified file
-          modified_file=$(git diff --name-only "$(git rev-parse HEAD~1)" HEAD)
+          parent_commit=$(git log --pretty=format:'%H' -n 1 HEAD~1)
+          modified_file=$(git diff --name-only "$parent_commit" HEAD)
           folder=$(dirname "$modified_file")
           echo "FOLDER=$folder" >> $GITHUB_ENV
 
@@ -59,7 +60,7 @@ jobs:
             git config user.name "${{ github.event.pusher.name }}"
             git add .
             git commit -m "Remove older files"
-            # Use the PAT for authentication
+            # Use the RV_TOKEN for authentication
             git push https://github.com/${{ github.repository }}.git HEAD:main
           else
             echo "No changes to commit."
