@@ -31,7 +31,7 @@ jobs:
         id: determine_folder
         run: |
           # Determine the folder containing the modified file
-          modified_file=$(git diff --name-only HEAD^ HEAD)
+          modified_file=$(git diff --name-only "$(git rev-parse HEAD~1)" HEAD)
           folder=$(dirname "$modified_file")
           echo "FOLDER=$folder" >> $GITHUB_ENV
 
@@ -42,12 +42,12 @@ jobs:
           cd "$GITHUB_WORKSPACE/$folder" || exit
           # List all files in the folder
           files=(*)
-          # If there are more than 2 files, sort them by modification time and remove the oldest ones
-          if [ ${#files[@]} -gt 2 ]; then
+          # If there are more than 3 files, sort them by modification time and remove the oldest ones
+          if [ ${#files[@]} -gt 3 ]; then
             # Sort files by modification time in ascending order
             sorted_files=($(ls -t --time=atime))
             # Remove the oldest files except the three most recent ones
-            for ((i=2; i<${#sorted_files[@]}; i++)); do
+            for ((i=3; i<${#sorted_files[@]}; i++)); do
               rm -f "${sorted_files[$i]}"
             done
           fi
