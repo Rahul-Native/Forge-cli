@@ -21,40 +21,33 @@ jobs:
           lfs: false
           submodules: false
           set-safe-directory: true
-          token: ${{ secrets.RV_TOKEN }}
+          token: ${{ secrets.NT_TOKEN }}
 
       - name: Set up Git
         run: | 
           git config --global credential.helper '!f() { sleep 1; echo "username=token"; echo "password=${{ secrets.RV_TOKEN }}"; }; f'
 
-      - name: Find updated folder
-        id: find_folder
+      - name: Determine updated folder
+        id: determine_folder
         run: |
-          # Determine if it's the initial commit
-          if git rev-parse --verify HEAD^ >/dev/null 2>&1; then
-            modified_file=$(git diff --name-only HEAD^ HEAD)
-          else
-            # If it's the initial commit, choose a default folder or handle it as needed
-            modified_file="default_folder/placeholder.txt"
-          fi
+          # Determine the folder containing the modified file
+          modified_file=$(git diff --name-only HEAD^ HEAD)
           folder=$(dirname "$modified_file")
-          echo "::set-output name=folder::$folder"
+          echo "FOLDER=$folder" >> $GITHUB_ENV
 
       - name: Remove old files
-        if: steps.find_folder.outputs.folder != 'default_folder'  # Skip if it's the initial commit
         run: |
-          # Get the folder path from the previous step
-          folder="${{ steps.find_folder.outputs.folder }}"
+          folder="$FOLDER"
           # Change to the directory of the updated folder
           cd "$GITHUB_WORKSPACE/$folder" || exit
           # List all files in the folder
           files=(*)
-          # If there are more than 3 files, sort them by modification time and remove the oldest ones
-          if [ ${#files[@]} -gt 3 ]; then
+          # If there are more than 2 files, sort them by modification time and remove the oldest ones
+          if [ ${#files[@]} -gt 2 ]; then
             # Sort files by modification time in ascending order
             sorted_files=($(ls -t --time=atime))
             # Remove the oldest files except the three most recent ones
-            for ((i=3; i<${#sorted_files[@]}; i++)); do
+            for ((i=2; i<${#sorted_files[@]}; i++)); do
               rm -f "${sorted_files[$i]}"
             done
           fi
