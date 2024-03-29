@@ -31,8 +31,8 @@ jobs:
         id: determine_folder
         run: |
           # Determine the folder containing the modified file
-          parent_commit=$(git rev-list --max-parents=0 HEAD^)
-          if [ -z "$parent_commit" ]; then
+          parent_commit=$(git log --pretty=format:%H --reverse | head -n 1)
+          if [ "$parent_commit" = "$(git rev-parse HEAD)" ]; then
             parent_commit="HEAD"
           fi
           modified_file=$(git diff --name-only "$parent_commit" HEAD)
