@@ -42,14 +42,17 @@ jobs:
       - name: Remove old files
         run: |
           folder="$FOLDER"
+          echo "Folder value is $folder"
           # Change to the directory of the updated folder
           cd "$GITHUB_WORKSPACE/$folder" || exit
+          echo "GITHUB_WORKSPACE/folder value is $GITHUB_WORKSPACE/$folder"
           # List all files in the folder
           files=(*)
           # If there are more than 3 files, sort them by modification time and remove the oldest ones
           if [ ${#files[@]} -gt 3 ]; then
             # Sort files by modification time in ascending order
             sorted_files=($(ls -t --time=atime))
+            echo "sorted_files value is $sorted_files"
             # Remove the oldest files except the three most recent ones
             for ((i=3; i<${#sorted_files[@]}; i++)); do
               rm -f "${sorted_files[$i]}"
