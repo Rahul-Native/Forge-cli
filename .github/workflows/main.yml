@@ -1,4 +1,4 @@
-name: Main Commit Check
+name: Main Commit Check - LIFO
 
 on:
   push:
@@ -13,7 +13,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
       with:
-        repository: RahulNative/Forge-cli
+        repository: RahulNative/Forge-cli  # Replace with your repository
         ssh-strict: true
         persist-credentials: false
         clean: true
@@ -27,41 +27,50 @@ jobs:
       run: |
         git config --global credential.helper '!f() { sleep 1; echo "username=token"; echo "password=${{ secrets.RV_TOKEN }}"; }; f'
 
-    - name: Determine updated folder
-      id: determine_folder
+    - name: Determine updated folder and files
+      id: determine_changes
       run: |
-        # Determine the folder containing the modified file
+        # Get parent commit hash (excluding the current commit)
         parent_commit=$(git log --pretty=format:%H --reverse | head -n 1)
         if [ "$parent_commit" = "$(git rev-parse HEAD)" ]; then
-          parent_commit="HEAD"
+          parent_commit="HEAD~"  # Use the previous commit if HEAD is the only commit
         fi
-        modified_file=$(git diff --name-only "$parent_commit" HEAD)
-        # Extract only the directory name from the modified file path
-        folder=$(dirname "$modified_file")
-        echo "FOLDER=$folder" >> $GITHUB_ENV
+        # Get all modified files and folders 
+        modified_files_and_folders=$(git diff --name-only --diff-filter=d --cached "$parent_commit" HEAD)
+
+        echo "MODIFIED_FILES_AND_FOLDERS=$modified_files_and_folders" >> $GITHUB_ENV
 
     - name: Remove old files (Optional)
       run: |
-        # Navigate to the directory containing the modified files
-        cd "$GITHUB_WORKSPACE/$folder" || exit
+        # Check if there are any modified files/folders
+        if [[ -z "$MODIFIED_FILES_AND_FOLDERS" ]]; then
+          echo "No changes detected."
+          exit 0
+        fi
 
-        pwd > $GITHUB_ENV.CURRENT_DIR
-        echo "Current directory: $CURRENT_DIR"
-    
-        # **Crucial fix:** Only list files within the current directory
-        files=( * )
+        # Extract only files (excluding folders) for removal
+        modified_files=$(echo "$MODIFIED_FILES_AND_FOLDERS" | grep -vE "/" )
 
-        # If there are more than 3 files, sort and remove the oldest ones
-        if [[ ${#files[@]} -gt 3 ]]; then
-          # Sort files by modification time in ascending order
-          sorted_files=($(ls -t --time=atime))
-          # Remove the oldest files except the three most recent ones (use for loop for clarity)
-          for (( i=3; i<${#sorted_files[@]}; i++ )); do
-            rm -f "${sorted_files[$i]}"
+        # If there are more than 3 files, sort and remove the most recently added ones (LIFO)
+        if [[ ${#modified_files[@]} -gt 3 ]]; then
+          # Reverse the order of files (LIFO)
+          modified_files=($(rev <<< "$modified_files"))
+          # Remove all files except the first three (latest added)
+          for (( i=3; i<${#modified_files[@]}; i++ )); do
+            rm -f "${modified_files[$i]}"
           done
         fi
 
-    - name: Check for changes and commit
+    - name: Check for folders in the commit
+      run: |
+        # Check if there are any modified folders
+        if [[ -n "$MODIFIED_FILES_AND_FOLDERS" ]]; then
+          echo "Folders are present in the commit: $MODIFIED_FILES_AND_FOLDERS"
+        else
+          echo "No folders found in the commit."
+        fi
+
+    - name: Check for changes and commit (if applicable)
       run: |
         if [ -n "$(git status --porcelain)" ]; then
           git config user.email "${{ github.event.pusher.email }}"
@@ -70,6 +79,4 @@ jobs:
           git commit -m "Remove older files"
           # Use the RV_TOKEN for authentication
           git push https://github.com/${{ github.repository }}.git HEAD:main
-        else
-          echo "No changes to commit."
         fi
