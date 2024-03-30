@@ -14,8 +14,10 @@ jobs:
       - name: Identify first inserted file
         id: identify-file
         run: |
-          first_file=$(git diff --name-only HEAD^ HEAD | head -1)
+          previous_commit=$(git rev-parse HEAD^)
+          first_file=$(git diff --name-only HEAD $previous_commit)
           echo "first_file=$first_file" >> $GITHUB_OUTPUT
+
 
       - name: Delete file
         if: steps.identify-file.outputs.first_file
