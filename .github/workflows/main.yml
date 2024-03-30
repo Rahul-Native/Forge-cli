@@ -45,6 +45,9 @@ jobs:
         # Navigate to the directory containing the modified files
         cd "$GITHUB_WORKSPACE/$folder" || exit
 
+        pwd > $GITHUB_ENV.CURRENT_DIR
+        echo "Current directory: $CURRENT_DIR"
+    
         # **Crucial fix:** Only list files within the current directory
         files=( * )
 
