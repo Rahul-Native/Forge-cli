@@ -33,11 +33,11 @@ jobs:
         # Get parent commit hash (excluding the current commit)
         parent_commit=$(git log --pretty=format:%H --reverse | head -n 1)
         if [ "$parent_commit" = "$(git rev-parse HEAD)" ]; then
-          parent_commit="HEAD~"  # Use the previous commit if HEAD is the only commit
+          parent_commit="HEAD~1"  # Use the previous commit if HEAD is the only commit
         fi
-        # Get all modified files and folders 
-        modified_files_and_folders=$(git diff --name-only --diff-filter=d --cached "$parent_commit" HEAD)
-
+    
+        # Get all modified files and folders
+        git diff --name-only --diff-filter=d --cached "$parent_commit" HEAD --  # Add '--' to separate revision from paths
         echo "MODIFIED_FILES_AND_FOLDERS=$modified_files_and_folders" >> $GITHUB_ENV
 
     - name: Remove old files (Optional)
