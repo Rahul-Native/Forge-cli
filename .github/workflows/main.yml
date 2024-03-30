@@ -27,18 +27,22 @@ jobs:
       run: |
         git config --global credential.helper '!f() { sleep 1; echo "username=token"; echo "password=${{ secrets.RV_TOKEN }}"; }; f'
 
+
     - name: Determine updated folder and files
       id: determine_changes
       run: |
-        # Get parent commit hash (excluding the current commit)
-        parent_commit=$(git log --pretty=format:%H --reverse | head -n 1)
-        if [ "$parent_commit" = "$(git rev-parse HEAD)" ]; then
-          parent_commit="HEAD~1"  # Use the previous commit if HEAD is the only commit
+        # Get parent commit hash (excluding the current commit, ensuring at least one exists)
+        if [ "$(git rev-list --count HEAD)" -gt 1 ]; then
+          parent_commit=$(git log --pretty=format:%H --reverse | head -n 1)
+        else
+          echo "No parent commit found. Using HEAD."
+          parent_commit="HEAD"
         fi
     
         # Get all modified files and folders
-        git diff --name-only --diff-filter=d --cached "$parent_commit" HEAD --  # Add '--' to separate revision from paths
+        git diff --name-only --diff-filter=d --cached "$parent_commit" HEAD --  # Use '--' to separate revision from paths
         echo "MODIFIED_FILES_AND_FOLDERS=$modified_files_and_folders" >> $GITHUB_ENV
+
 
     - name: Remove old files (Optional)
       run: |
