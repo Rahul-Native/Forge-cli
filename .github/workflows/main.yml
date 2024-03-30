@@ -44,14 +44,16 @@ jobs:
       run: |
         # Navigate to the directory containing the modified files
         cd "$GITHUB_WORKSPACE/$folder" || exit
-        # List all files in the current directory
-        files=(*)
-        # If there are more than 3 files, sort them by modification time and remove the oldest ones
-        if [ ${#files[@]} -gt 3 ]; then
+
+        # **Crucial fix:** Only list files within the current directory
+        files=( * )
+
+        # If there are more than 3 files, sort and remove the oldest ones
+        if [[ ${#files[@]} -gt 3 ]]; then
           # Sort files by modification time in ascending order
           sorted_files=($(ls -t --time=atime))
-          # Remove the oldest files except the three most recent ones
-          for ((i=3; i<${#sorted_files[@]}; i++)); do
+          # Remove the oldest files except the three most recent ones (use for loop for clarity)
+          for (( i=3; i<${#sorted_files[@]}; i++ )); do
             rm -f "${sorted_files[$i]}"
           done
         fi
