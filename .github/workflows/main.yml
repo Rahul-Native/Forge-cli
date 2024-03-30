@@ -10,64 +10,61 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-        with:
-          repository: RahulNative/Forge-cli
-          ssh-strict: true
-          persist-credentials: false
-          clean: true
-          fetch-depth: 1
-          lfs: false
-          submodules: false
-          set-safe-directory: true
-          token: ${{ secrets.RV_TOKEN }}
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        repository: RahulNative/Forge-cli
+        ssh-strict: true
+        persist-credentials: false
+        clean: true
+        fetch-depth: 1
+        lfs: false
+        submodules: false
+        set-safe-directory: true
+        token: ${{ secrets.RV_TOKEN }}
 
-      - name: Set up Git
-        run: | 
-          git config --global credential.helper '!f() { sleep 1; echo "username=token"; echo "password=${{ secrets.RV_TOKEN }}"; }; f'
+    - name: Set up Git
+      run: |
+        git config --global credential.helper '!f() { sleep 1; echo "username=token"; echo "password=${{ secrets.RV_TOKEN }}"; }; f'
 
-      - name: Determine updated folder
-        id: determine_folder
-        run: |
-          # Determine the folder containing the modified file
-          parent_commit=$(git log --pretty=format:%H --reverse | head -n 1)
-          if [ "$parent_commit" = "$(git rev-parse HEAD)" ]; then
-            parent_commit="HEAD"
-          fi
-          modified_file=$(git diff --name-only "$parent_commit" HEAD)
-          folder=$(dirname "$modified_file")
-          echo "FOLDER=$folder" >> $GITHUB_ENV
+    - name: Determine updated folder
+      id: determine_folder
+      run: |
+        # Determine the folder containing the modified file
+        parent_commit=$(git log --pretty=format:%H --reverse | head -n 1)
+        if [ "$parent_commit" = "$(git rev-parse HEAD)" ]; then
+          parent_commit="HEAD"
+        fi
+        modified_file=$(git diff --name-only "$parent_commit" HEAD)
+        # Extract only the directory name from the modified file path
+        folder=$(dirname "$modified_file")
+        echo "FOLDER=$folder" >> $GITHUB_ENV
 
-      - name: Remove old files
-        run: |
-          folder="$FOLDER"
-          echo "Folder value is $folder"
-          # Change to the directory of the updated folder
-          cd "$GITHUB_WORKSPACE/$folder" || exit
-          echo "GITHUB_WORKSPACE/folder value is $GITHUB_WORKSPACE/$folder"
-          # List all files in the folder
-          files=(*)
-          # If there are more than 3 files, sort them by modification time and remove the oldest ones
-          if [ ${#files[@]} -gt 3 ]; then
-            # Sort files by modification time in ascending order
-            sorted_files=($(ls -t --time=atime))
-            echo "sorted_files value is $sorted_files"
-            # Remove the oldest files except the three most recent ones
-            for ((i=3; i<${#sorted_files[@]}; i++)); do
-              rm -f "${sorted_files[$i]}"
-            done
-          fi
+    - name: Remove old files (Optional)
+      run: |
+        # Navigate to the directory containing the modified files
+        cd "$GITHUB_WORKSPACE/$folder" || exit
+        # List all files in the current directory
+        files=(*)
+        # If there are more than 3 files, sort them by modification time and remove the oldest ones
+        if [ ${#files[@]} -gt 3 ]; then
+          # Sort files by modification time in ascending order
+          sorted_files=($(ls -t --time=atime))
+          # Remove the oldest files except the three most recent ones
+          for ((i=3; i<${#sorted_files[@]}; i++)); do
+            rm -f "${sorted_files[$i]}"
+          done
+        fi
 
-      - name: Check for changes and commit
-        run: |
-          if [ -n "$(git status --porcelain)" ]; then
-            git config user.email "${{ github.event.pusher.email }}"
-            git config user.name "${{ github.event.pusher.name }}"
-            git add .
-            git commit -m "Remove older files"
-            # Use the RV_TOKEN for authentication
-            git push https://github.com/${{ github.repository }}.git HEAD:main
-          else
-            echo "No changes to commit."
-          fi
+    - name: Check for changes and commit
+      run: |
+        if [ -n "$(git status --porcelain)" ]; then
+          git config user.email "${{ github.event.pusher.email }}"
+          git config user.name "${{ github.event.pusher.name }}"
+          git add .
+          git commit -m "Remove older files"
+          # Use the RV_TOKEN for authentication
+          git push https://github.com/${{ github.repository }}.git HEAD:main
+        else
+          echo "No changes to commit."
+        fi
