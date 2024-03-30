@@ -1,51 +1,25 @@
-name: Main Commit Check
+name: Delete First Inserted File
 
 on:
   push:
     branches:
-      - main
+      - check  # Replace with the actual branch name
 
 jobs:
-  check-files:
+  delete-file:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - name: Find and remove old files
+      - name: Identify first inserted file
+        id: identify-file
         run: |
-          # Change to the directory where your folders are located
-          cd $GITHUB_WORKSPACE
+          first_file=$(git diff --name-only HEAD^ HEAD | head -1)
+          echo "first_file=$first_file" >> $GITHUB_OUTPUT
 
-          # List all files and directories except for .git
-          for item in *; do
-            # Check if the item is a directory
-            if [ -d "$item" ]; then
-              # Change to the folder
-              cd "$item"
-
-              # Count the number of files in the folder
-              file_count=$(ls -1 | wc -l)
-
-              # If there are more than 10 files, remove the oldest ones
-              if [ $file_count -gt 10 ]; then
-                ls -t | tail -n +11 | xargs -I {} rm -f {}
-              fi
-
-              # Move back to the main directory
-              cd ..
-            fi
-          done
-
-      - name: Check for changes
+      - name: Delete file
+        if: steps.identify-file.outputs.first_file
         run: |
-          if [ -n "$(git status --porcelain)" ]; then
-            git config --local user.email "action@github.com"
-            git config --local user.name "GitHub Action"
-            git add .
-            git commit -m "Remove older files"
-            git push
-          else
-            echo "No changes to commit."
-          fi
+          rm ${{ steps.identify-file.outputs.first_file }}
+          git commit -a -m "Deleted first inserted file: ${{ steps.identify-file.outputs.first_file }}"
+          git push
