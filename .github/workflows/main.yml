@@ -1,4 +1,4 @@
-name: Main Commit Check - LIFO
+name: Remove Old Files
 
 on:
   push:
@@ -6,81 +6,41 @@ on:
       - main
 
 jobs:
-  check-files:
+  remove_old_files:
+    name: Remove old files
     runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
-      with:
-        repository: RahulNative/Forge-cli  # Replace with your repository
-        ssh-strict: true
-        persist-credentials: false
-        clean: true
-        fetch-depth: 1
-        lfs: false
-        submodules: false
-        set-safe-directory: true
-        token: ${{ secrets.RV_TOKEN }}
-
-    - name: Set up Git
-      run: |
-        git config --global credential.helper '!f() { sleep 1; echo "username=token"; echo "password=${{ secrets.RV_TOKEN }}"; }; f'
-
-
-    - name: Determine updated folder and files
-      id: determine_changes
-      run: |
-        # Get parent commit hash (excluding the current commit, ensuring at least one exists)
-        if [ "$(git rev-list --count HEAD)" -gt 1 ]; then
-          parent_commit=$(git log --pretty=format:%H --reverse | head -n 1)
-        else
-          echo "No parent commit found. Using HEAD."
-          parent_commit="HEAD"
-        fi
     
-        # Get all modified files and folders
-        git diff --name-only --diff-filter=d --cached "$parent_commit" HEAD --  # Use '--' to separate revision from paths
-        echo "MODIFIED_FILES_AND_FOLDERS=$modified_files_and_folders" >> $GITHUB_ENV
-
-
-    - name: Remove old files (Optional)
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      
+    - name: Install Git
+      run: sudo apt-get install git -y
+      
+    - name: Set up Git credentials
       run: |
-        # Check if there are any modified files/folders
-        if [[ -z "$MODIFIED_FILES_AND_FOLDERS" ]]; then
-          echo "No changes detected."
-          exit 0
-        fi
-
-        # Extract only files (excluding folders) for removal
-        modified_files=$(echo "$MODIFIED_FILES_AND_FOLDERS" | grep -vE "/" )
-
-        # If there are more than 3 files, sort and remove the most recently added ones (LIFO)
-        if [[ ${#modified_files[@]} -gt 3 ]]; then
-          # Reverse the order of files (LIFO)
-          modified_files=($(rev <<< "$modified_files"))
-          # Remove all files except the first three (latest added)
-          for (( i=3; i<${#modified_files[@]}; i++ )); do
-            rm -f "${modified_files[$i]}"
-          done
-        fi
-
-    - name: Check for folders in the commit
+        git config --global user.email "${{ github.event.pusher.email }}"
+        git config --global user.name "${{ github.event.pusher.name }}"
+      
+    - name: List all folders
       run: |
-        # Check if there are any modified folders
-        if [[ -n "$MODIFIED_FILES_AND_FOLDERS" ]]; then
-          echo "Folders are present in the commit: $MODIFIED_FILES_AND_FOLDERS"
-        else
-          echo "No folders found in the commit."
-        fi
-
-    - name: Check for changes and commit (if applicable)
+        find . -type d > folders.txt
+        
+    - name: Remove old files except last three inserted
       run: |
-        if [ -n "$(git status --porcelain)" ]; then
-          git config user.email "${{ github.event.pusher.email }}"
-          git config user.name "${{ github.event.pusher.name }}"
-          git add .
-          git commit -m "Remove older files"
-          # Use the RV_TOKEN for authentication
-          git push https://github.com/${{ github.repository }}.git HEAD:main
-        fi
+        while IFS= read -r folder; do
+          cd "$folder" || continue
+          ls -1t | tail -n +4 | xargs -I {} rm -- {}
+          cd ..
+        done < folders.txt
+        
+    - name: Commit changes
+      run: |
+        git add .
+        git diff --quiet && git diff --staged --quiet || git commit -m "Remove old files"
+        
+    - name: Push changes
+      if: success()
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.RV_TOKEN }}
