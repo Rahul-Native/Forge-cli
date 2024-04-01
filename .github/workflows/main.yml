@@ -30,9 +30,11 @@ jobs:
       run: |
         while IFS= read -r folder; do
           cd "$folder" || continue
-          ls -1t | tail -n +4 | xargs -I {} rm -- {}
+          # Remove files only, not directories
+          find . -maxdepth 1 -type f -printf "%T@\t%p\0" | sort -z -n | head -z -n -3 | cut -z -f2- | xargs -0 rm -f
           cd ..
         done < folders.txt
+
         
     - name: Commit changes
       run: |
