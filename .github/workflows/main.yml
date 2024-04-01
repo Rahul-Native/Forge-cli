@@ -29,14 +29,7 @@ jobs:
     - name: Remove old files except last three inserted
       run: |
         while IFS= read -r folder; do
-          find "$folder" -type f -exec sh -c '
-            for file do
-              count=$(ls -lt "$file" | wc -l)
-              if [ $count -gt 3 ]; then
-                rm -f "$file"
-              fi
-            done
-          ' sh {} +
+          find "$folder" -type f -print0 | xargs -0 ls -1t | tail -n +4 | xargs -d '\n' rm -f
         done < folders.txt
         
     - name: Commit changes
