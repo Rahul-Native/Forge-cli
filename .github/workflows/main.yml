@@ -36,14 +36,17 @@ jobs:
 
       
     - name: Remove old files in modified folders
+      env:
+        GITHUB_SHA: ${{ github.sha }}
       run: |
         while IFS= read -r folder; do
           last_commit=$(cat "${folder}/last_commit.txt")
-          git diff --name-only "$last_commit" "${github.sha}" -- "$folder" > "${folder}/modified_files.txt"
+          git diff --name-only "$last_commit" "$GITHUB_SHA" -- "$folder" > "${folder}/modified_files.txt"
           while IFS= read -r file; do
             rm -f "$folder/$file"
           done < "${folder}/modified_files.txt"
         done < folders.txt
+
         
     - name: Commit changes
       run: |
