@@ -21,30 +21,34 @@ jobs:
       run: |
         git config --global user.email "${{ github.event.pusher.email }}"
         git config --global user.name "${{ github.event.pusher.name }}"
-      
-    - name: Get modified files
-      id: get_files
+        
+    - name: List all folders
       run: |
-            git diff --name-only ${{ github.sha }}^ ${{ github.sha }} > modified_files.txt
-      
-    - name: Extract folders
+        find . -type d > folders.txt
+        
+    - name: Find last commit in each folder
       run: |
-        awk -F'/' '{print $1"/"$2}' modified_files.txt | sort -u > modified_folders.txt
-      
-    - name: Debug modified folders
-      run: cat modified_folders.txt
+        while IFS= read -r folder; do
+          cd "$folder"
+          last_commit=$(git log -1 --format=%H)
+          echo "$last_commit" > "${folder}/last_commit.txt"
+          cd ..
+        done < folders.txt
       
     - name: Remove old files in modified folders
       run: |
         while IFS= read -r folder; do
-          echo "Removing old files in folder: $folder"
-          find "$folder" -type f -print0 | xargs -0 ls -1t | tail -n +4 | xargs -d '\n' rm -f
-        done < modified_folders.txt
+          last_commit=$(cat "${folder}/last_commit.txt")
+          git diff --name-only "$last_commit" "${github.sha}" -- "$folder" > "${folder}/modified_files.txt"
+          while IFS= read -r file; do
+            rm -f "$folder/$file"
+          done < "${folder}/modified_files.txt"
+        done < folders.txt
         
     - name: Commit changes
       run: |
         git add .
-        git diff --quiet && git diff --staged --quiet || git commit -m "Remove old files 1"
+        git diff --quiet && git diff --staged --quiet || git commit -m "Remove old files"
         
     - name: Push changes
       if: success()
