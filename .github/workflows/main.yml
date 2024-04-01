@@ -29,24 +29,29 @@ jobs:
     - name: Find last commit in each folder
       run: |
         while IFS= read -r folder; do
-          full_path="$(pwd)/$folder"
-          last_commit=$(git -C "$full_path" log -1 --format=%H)
-          echo "$last_commit" > "${full_path}/last_commit.txt"
+          if [ -d "$folder" ]; then
+            last_commit=$(cat "${folder}/last_commit.txt" 2>/dev/null || echo "${GITHUB_SHA}^")
+            echo "$last_commit" > "${folder}/last_commit.txt"
+          else
+            echo "Folder $folder does not exist."
+          fi
         done < folders.txt
-
       
     - name: Remove old files in modified folders
       env:
         GITHUB_SHA: ${{ github.sha }}
       run: |
         while IFS= read -r folder; do
-          last_commit=$(cat "${folder}/last_commit.txt")
-          git diff --name-only "$last_commit" "$GITHUB_SHA" -- "$folder" > "${folder}/modified_files.txt"
-          while IFS= read -r file; do
-            rm -f "$folder/$file"
-          done < "${folder}/modified_files.txt"
+          if [ -d "$folder" ]; then
+            last_commit=$(cat "${folder}/last_commit.txt" 2>/dev/null || echo "${GITHUB_SHA}^")
+            git diff --name-only "$last_commit" "$GITHUB_SHA" -- "$folder" > "${folder}/modified_files.txt"
+            while IFS= read -r file; do
+              rm -f "$folder/$file"
+            done < "${folder}/modified_files.txt"
+          else
+            echo "Folder $folder does not exist."
+          fi
         done < folders.txt
-
         
     - name: Commit changes
       run: |
