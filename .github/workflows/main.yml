@@ -29,11 +29,11 @@ jobs:
     - name: Find last commit in each folder
       run: |
         while IFS= read -r folder; do
-          cd "$folder"
-          last_commit=$(git log -1 --format=%H)
-          echo "$last_commit" > "${folder}/last_commit.txt"
-          cd ..
+          full_path="$(pwd)/$folder"
+          last_commit=$(git -C "$full_path" log -1 --format=%H)
+          echo "$last_commit" > "${full_path}/last_commit.txt"
         done < folders.txt
+
       
     - name: Remove old files in modified folders
       run: |
