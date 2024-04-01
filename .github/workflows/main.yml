@@ -25,7 +25,7 @@ jobs:
     - name: Get modified files
       id: get_files
       run: |
-        git diff --name-only ${{ github.event.before }} ${{ github.sha }} > modified_files.txt
+        git diff --name-only 6801aa928214456a39b87c2e50d784f4fd3984d4 9dd867a7dbe6e9fd99ef69dfe4de0253c68d06fa > modified_files.txt
       
     - name: Extract folders
       run: |
