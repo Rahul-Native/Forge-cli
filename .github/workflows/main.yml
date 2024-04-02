@@ -8,7 +8,7 @@ on:
 jobs:
   check-files:
     runs-on: ubuntu-latest
-
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -61,7 +61,7 @@ jobs:
             git config user.email "${{ github.event.pusher.email }}"
             git config user.name "${{ github.event.pusher.name }}"
             git add .
-            git commit -m "Remove older files"
+            git commit -m "Remove older files [skip ci]"
             # Use the PAT for authentication
             git push https://github.com/${{ github.repository }}.git HEAD:main
           else
