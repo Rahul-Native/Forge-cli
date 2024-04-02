@@ -30,6 +30,14 @@ jobs:
         run: |
           # Change to the directory where your folders are located
           cd $GITHUB_WORKSPACE
+
+          a=$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }})
+
+          # Split the string by '/' and get the second last element
+          folder_name=$(echo $a | rev | cut -d'/' -f 2 | rev)
+
+          echo "folder_name ::: $folder_name"
+          
           # List all files and directories except for .git
           for item in *; do
             echo "item ::: $item"
