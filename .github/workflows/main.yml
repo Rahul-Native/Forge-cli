@@ -51,10 +51,9 @@ jobs:
                             ls -t | tail -n +3 | xargs -I {} rm -f {}
                           fi
                           # Move back to the main directory
-                          cd ..
+                          cd $GITHUB_WORKSPACE
                       fi
                   done
-                  # cd ..
               fi
           done
 
