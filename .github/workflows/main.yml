@@ -31,37 +31,54 @@ jobs:
           # Change to the directory where your folders are located
           cd $GITHUB_WORKSPACE
 
-          a=$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }})
-
-          echo "a ::: $a"
-          
-          # Split the string by '/' and get the second last element
-          folder_name=$(echo $a | rev | cut -d'/' -f 2 | rev)
-
-          echo "folder_name ::: $folder_name"
-          
-          # List all files and directories except for .git
           for item in *; do
-            echo "item ::: $item"
-            for subitem in "$item"/*; do
-              if [ -d "$item2" ]; then
-                echo "subitem ::: $subitem"
+              # Check if the item is a directory
+              if [ -d "$item" ]; then
+                  echo "Folder: $item"
+                  # Loop through each file or subfolder in the directory
+                  for subitem in "$item"/*; do
+                      # Check if the subitem is a file
+                      if [ -f "$subitem" ]; then
+                          echo "File: $subitem"
+                      elif [ -d "$subitem" ]; then
+                          echo "Subfolder: $subitem"
+                      fi
+                  done
               fi
-            done
-            # Check if the item is a directory
-            if [ -d "$item" ]; then
-              # Change to the folder
-              cd "$item"
-              # Count the number of files in the folders
-              file_count=$(ls -1 | wc -l)
-              # If there are more than 2 files, remove the oldest ones
-              if [ $file_count -gt 2 ]; then
-                ls -t | tail -n +3 | xargs -I {} rm -f {}
-              fi
-              # Move back to the main directory
-              cd ..
-            fi
           done
+
+          
+          # a=$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }})
+
+          # echo "a ::: $a"
+          
+          # # Split the string by '/' and get the second last element
+          # folder_name=$(echo $a | rev | cut -d'/' -f 2 | rev)
+
+          # echo "folder_name ::: $folder_name"
+          
+          # # List all files and directories except for .git
+          # for item in *; do
+          #   echo "item ::: $item"
+          #   for subitem in "$item"/*; do
+          #     if [ -d "$item2" ]; then
+          #       echo "subitem ::: $subitem"
+          #     fi
+          #   done
+          #   # Check if the item is a directory
+          #   if [ -d "$item" ]; then
+          #     # Change to the folder
+          #     cd "$item"
+          #     # Count the number of files in the folders
+          #     file_count=$(ls -1 | wc -l)
+          #     # If there are more than 2 files, remove the oldest ones
+          #     if [ $file_count -gt 2 ]; then
+          #       ls -t | tail -n +3 | xargs -I {} rm -f {}
+          #     fi
+          #     # Move back to the main directory
+          #     cd ..
+          #   fi
+          # done
       - name: Check for changes and commit
         run: |
           if [ -n "$(git status --porcelain)" ]; then
