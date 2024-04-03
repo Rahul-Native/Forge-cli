@@ -43,9 +43,9 @@ jobs:
           # List all files and directories except for .git
           for item in *; do
             echo "item ::: $item"
-            for item2 in item; do
+            for subitem in "$item"/*; do
               if [ -d "$item2" ]; then
-                echo "item2 ::: $item2"
+                echo "subitem ::: $subitem"
               fi
             done
             # Check if the item is a directory
