@@ -43,7 +43,7 @@ jobs:
           # List all files and directories except for .git
           for item in *; do
             echo "item ::: $item"
-            for item2 in *; do
+            for item2 in item; do
               if [ -d "$item2" ]; then
                 echo "item2 ::: $item2"
               fi
