@@ -42,8 +42,19 @@ jobs:
                           echo "File: $subitem"
                       elif [ -d "$subitem" ]; then
                           echo "Subfolder: $subitem"
+                          # Change to the folder
+                          cd "$subitem"
+                          # Count the number of files in the folders
+                          file_count=$(ls -1 | wc -l)
+                          # If there are more than 2 files, remove the oldest ones
+                          if [ $file_count -gt 2 ]; then
+                            ls -t | tail -n +3 | xargs -I {} rm -f {}
+                          fi
+                          # Move back to the main directory
+                          cd ..
                       fi
                   done
+                  cd ..
               fi
           done
 
