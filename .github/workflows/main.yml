@@ -48,7 +48,7 @@ jobs:
                           file_count=$(ls -1 | wc -l)
                           # If there are more than 2 files, remove the oldest ones
                           if [ $file_count -gt 2 ]; then
-                            ls t | tail -n +3 | xargs -I {} rm -f {}
+                            ls -t -r | tail -n +3 | xargs -I {} rm -f {}
                           fi
                           # Move back to the main directory
                           cd $GITHUB_WORKSPACE
