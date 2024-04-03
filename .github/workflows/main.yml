@@ -46,6 +46,7 @@ jobs:
             for item2 in *; do
               if [ -d "$item2" ]; then
                 echo "item2 ::: $item2"
+              fi
             done
             # Check if the item is a directory
             if [ -d "$item" ]; then
