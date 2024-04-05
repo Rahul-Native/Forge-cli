@@ -34,23 +34,15 @@ jobs:
           for item in *; do
               # Check if the item is a directory
               if [ -d "$item" ]; then
-                  echo "Folder: $item"
-                  # Loop through each file or subfolder in the directory
                   for subitem in "$item"/*; do
-                      # Check if the subitem is a file
                       if [ -f "$subitem" ]; then
-                          echo "File: $subitem"
                       elif [ -d "$subitem" ]; then
-                          echo "Subfolder: $subitem"
-                          # Change to the folder
                           cd "$subitem"
-                          # Count the number of files in the folders
                           file_count=$(ls -1 | wc -l)
                           # If there are more than 2 files, remove the oldest ones
                           if [ $file_count -gt 2 ]; then
                             ls -t | head -n 1 | tac  | xargs -I {} rm -f {}
                           fi
-                          # Move back to the main directory
                           cd $GITHUB_WORKSPACE
                       fi
                   done
