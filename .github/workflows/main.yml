@@ -35,8 +35,7 @@ jobs:
               # Check if the item is a directory
               if [ -d "$item" ]; then
                   for subitem in "$item"/*; do
-                      if [ -f "$subitem" ]; then
-                      elif [ -d "$subitem" ]; then
+                      if [ -d "$subitem" ]; then
                           cd "$subitem"
                           file_count=$(ls -1 | wc -l)
                           # If there are more than 2 files, remove the oldest ones
